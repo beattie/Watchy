@@ -1,6 +1,6 @@
 #include "Watchy_7_SEG.h"
 
-#define DARKMODE true
+#define DARKMODE false
 
 const uint8_t BATTERY_SEGMENT_WIDTH = 7;
 const uint8_t BATTERY_SEGMENT_HEIGHT = 11;
@@ -22,7 +22,9 @@ void Watchy7SEG::drawWatchFace(){
     }
     #ifdef ARDUINO_ESP32S3_DEV
     if(USB_PLUGGED_IN){
-      display.drawBitmap(140, 75, charge, 16, 18, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
+      display.drawBitmap(140, 75,
+			  	digitalRead(CHRG_STATUS_PIN) ? charge_outline : charge, 16, 18,
+			   	DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
     }
     #endif
 }
@@ -85,9 +87,12 @@ void Watchy7SEG::drawSteps(){
     display.setCursor(35, 190);
     display.println(stepCount);
 }
+
 void Watchy7SEG::drawBattery(){
-    display.drawBitmap(158, 73, battery, 37, 21, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
-    display.fillRect(163, 78, 27, BATTERY_SEGMENT_HEIGHT, DARKMODE ? GxEPD_BLACK : GxEPD_WHITE);//clear battery segments
+    display.drawBitmap(158, 73, battery, 37, 21, DARKMODE ?
+				GxEPD_WHITE : GxEPD_BLACK);
+    display.fillRect(163, 78, 27, BATTERY_SEGMENT_HEIGHT, DARKMODE ?
+				GxEPD_BLACK : GxEPD_WHITE);//clear battery segments
     int8_t batteryLevel = 0;
     float VBAT = getBatteryVoltage();
     if(VBAT > 4.0){
@@ -106,6 +111,16 @@ void Watchy7SEG::drawBattery(){
     for(int8_t batterySegments = 0; batterySegments < batteryLevel; batterySegments++){
         display.fillRect(163 + (batterySegments * BATTERY_SEGMENT_SPACING), 78, BATTERY_SEGMENT_WIDTH, BATTERY_SEGMENT_HEIGHT, DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
     }
+
+	int percentage = ((VBAT - 3.5) / (4.2 - 3.5)) * 100;
+	display.setFont(&FreeMonoBold9pt7b); // Set a clear font style
+	display.setTextColor(DARKMODE ? GxEPD_WHITE : GxEPD_BLACK);
+	display.setCursor(158, 70);			 // Adjust (X, Y) coordinates to fix
+										 // layout placement
+	display.print(String(percentage) + "%");
+	// display voltage for calibration
+	display.setCursor(150, 105);
+	display.print(VBAT);
 }
 
 void Watchy7SEG::drawWeather(){
