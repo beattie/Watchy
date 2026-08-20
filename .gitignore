@@ -69,3 +69,6 @@ nbbuild.xml
 nbproject
 .vscode
 examples/WatchFaces/7_SEG/secrets.h
+
+.pio/
+restore/
